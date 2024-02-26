@@ -8,7 +8,7 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  // TODO: Propojit s Firebase, udělat login/register, firestore pro uložení dat, vytvořit grafy podle toho(filtrace na týden, měsíc, rok)
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
