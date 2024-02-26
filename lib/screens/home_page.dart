@@ -1,7 +1,8 @@
-import 'package:expense_tracker/models/expense_model.dart';
-import 'package:expense_tracker/widgets/item.dart';
+import 'package:expense_tracker/widgets/add_transaction_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:expense_tracker/models/expense_model.dart';
+import 'package:expense_tracker/widgets/fund_condition.dart';
+import 'package:expense_tracker/widgets/item.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -10,191 +11,131 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-//listy bych mohl mít v utils složce
-List<String> options = [
-  "expense",
-  "income",
-];
-
-List items = [
-  ExpenseModel(
-      item: "computer", amount: 23423, date: DateTime.now(), isIncome: true)
-];
-
 class _HomePageState extends State<HomePage> {
-  final itemController = TextEditingController();
-  final amountController = TextEditingController();
-  final dateController = TextEditingController();
-  String currentOption = options[0];
-  DateTime? pickedDate;
-  int deposit = 0;
+  final List<String> options = ["expense", "income"];
+  final List<ExpenseModel> expenses = [];
+  final TextEditingController itemController = TextEditingController();
+  final TextEditingController amountController = TextEditingController();
+  final TextEditingController dateController = TextEditingController();
+  int totalMoney = 0;
   int spentMoney = 0;
   int income = 0;
-  
+  DateTime? pickedDate;
+  String currentOption = "expense";
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.red,
+        onPressed: _showAddTransactionDialog,
+        child: const Icon(Icons.add, size: 26),
+      ),
       appBar: AppBar(
         title: const Text("Expense Tracker"),
         centerTitle: true,
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.red.shade500,
         elevation: 0,
       ),
-      resizeToAvoidBottomInset: false,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(
-              context: context,
-              builder: (context) {
-                return SizedBox(
-                  height: 400,
-                  child: AlertDialog(
-                    title: const Text('Add Transaction'),
-                    actions: [
-                      TextButton(
-                          onPressed: () {
-                             int convertedAmount =
-                                int.parse(amountController.text);
-                            final expenseModel = ExpenseModel(
-                                item: itemController.text,
-                                amount: convertedAmount,
-                                date: pickedDate!,
-                                isIncome: currentOption == "income" ? true : false);
-                           
-                            items.add(expenseModel);
-                            Navigator.pop(context);
-                            itemController.clear();
-                            amountController.clear();
-                            dateController.clear();
-                            setState(() {});
-                          },
-                          child: const Text("ADD")),
-                      TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            itemController.clear();
-                            amountController.clear();
-                            dateController.clear();
-                          },
-                          child: const Text("CANCEL"))
-                    ],
-                    content: SizedBox(
-                      height: 400,
-                      width: 350,
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: itemController,
-                            decoration: const InputDecoration(
-                              hintText: "Enter the Item",
-                              enabledBorder: OutlineInputBorder(),
-                              focusedBorder: OutlineInputBorder(),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: amountController,
-                            decoration: const InputDecoration(
-                              hintText: "Enter the Amount",
-                              enabledBorder: OutlineInputBorder(),
-                              focusedBorder: OutlineInputBorder(),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          TextField(
-                            onTap: () async {
-                              pickedDate = await showDatePicker(
-                                  context: context,
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime(2100),
-                                  initialDate: DateTime.now());
-                              String convertedDate =
-                                  DateFormat.yMMMMd().format(pickedDate!);
-                              dateController.text = convertedDate;
-                              setState(() {});
-                            },
-                            controller: dateController,
-                            readOnly: true,
-                            decoration: const InputDecoration(
-                                prefixIcon: Icon(Icons.calendar_today),
-                                prefixIconColor: Colors.blue,
-                                enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.grey)),
-                                focusedBorder: OutlineInputBorder(
-                                    borderSide:
-                                        BorderSide(color: Colors.blue))),
-                          ),
-                          RadioMenuButton(
-                              value: options[0],
-                              groupValue: currentOption,
-                              onChanged: (expense) {
-                                currentOption = expense.toString();
-                              },
-                              child: const Text("Expense")),
-                          RadioMenuButton(
-                              value: options[1],
-                              groupValue: currentOption,
-                              onChanged: (income) {
-                                currentOption = income.toString();
-                              },
-                              child: const Text("income"))
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              });
-        },
-        child: const Icon(Icons.add),
-      ),
-      body: SafeArea(
-          child: Padding(
-        padding: const EdgeInsets.only(top: 14),
+      body: Padding(
+        padding: const EdgeInsets.only(top: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(
-              height: 6,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildFundCondition(type: "DEPOSIT", amount: "$totalMoney", icon: "blue"),
+                _buildFundCondition(type: "EXPENSE", amount: "$spentMoney", icon: "orange"),
+                _buildFundCondition(type: "INCOME", amount: "$income", icon: "grey"),
+              ],
             ),
+            const SizedBox(height: 14),
             Expanded(
-                child: ListView.builder(
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () {
-                    showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text("Confirm to delete item"),
-                            actions: [
-                              TextButton(
-                                  onPressed: () {
-                                    items.remove(
-                                      items[index],
-                                    );
-                                    setState(() {});
-                                    Navigator.pop(context);
-                                  },
-                                  child: const Text("Delete")),
-                              TextButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  }, child: const Text("Cancel"))
-                            ],
-                          );
-                        });
-                  },
-                  child: Item(
-                    expenseModel: items[index],
-                    imageName: 'expense.png',
-                  ),
-                );
-              },
-            ))
+              child: ListView.builder(
+                itemCount: expenses.length,
+                itemBuilder: (context, index) {
+                  return GestureDetector(
+                    onTap: () => _showDeleteConfirmationDialog(expenses[index]),
+                    child: Item(
+                      expense: expenses[index],
+                      onDelete: () => _deleteExpense(index),
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
         ),
-      )),
+      ),
+    );
+  }
+
+  void _showAddTransactionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AddTransactionDialog(
+        options: options,
+        onAddTransaction: _addTransaction,
+      ),
+    );
+  }
+
+  void _addTransaction(ExpenseModel expense) {
+    expenses.add(expense);
+    if (expense.isIncome) {
+      income += expense.amount;
+      totalMoney += expense.amount;
+    } else {
+      spentMoney += expense.amount;
+      totalMoney -= expense.amount;
+    }
+    setState(() {});
+  }
+
+  void _deleteExpense(int index) {
+    final myExpense = expenses[index];
+    if (myExpense.isIncome) {
+      income -= myExpense.amount;
+      totalMoney -= myExpense.amount;
+    } else {
+      spentMoney -= myExpense.amount;
+      totalMoney += myExpense.amount;
+    }
+    expenses.remove(myExpense);
+    setState(() {});
+  }
+
+  void _showDeleteConfirmationDialog(ExpenseModel expense) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          "Confirm to Delete the Item ?",
+          style: TextStyle(fontSize: 19.0),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("CANCEL", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ),
+          TextButton(
+            onPressed: () {
+              _deleteExpense(expenses.indexOf(expense));
+              Navigator.pop(context);
+            },
+            child: const Text("DELETE", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFundCondition({required String type, required String amount, required String icon}) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8),
+      child: FundCondition(type: type, amount: amount, icon: icon),
     );
   }
 }
