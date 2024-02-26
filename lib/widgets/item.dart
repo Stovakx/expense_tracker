@@ -1,8 +1,13 @@
+import 'package:expense_tracker/models/expense_model.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class Item extends StatelessWidget {
-  const Item({Key? key, }) : super(key: key);
-  //final String imageName;
+  final ExpenseModel expenseModel;
+  const Item({
+    Key? key, required this.imageName, required this.expenseModel,
+  }) : super(key: key);
+  final String imageName;
 
   @override
   Widget build(BuildContext context) {
@@ -19,26 +24,33 @@ class Item extends StatelessWidget {
             height: 35,
             width: 35,
             child: Image.asset(
-              "images/expense.png",
+              "images/$imageName",
               height: 40,
             ),
           ),
-          const SizedBox(width: 10,),
-          const Column(
+          const SizedBox(
+            width: 10,
+          ),
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Data",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                expenseModel.item.toString(),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Text(
-                "Date",
-                style: TextStyle(color: Colors.blueGrey),
+                DateFormat.yMMMMd().format(expenseModel.date),
+                style: const TextStyle(color: Colors.blueGrey),
               )
             ],
           ),
-          Text("\$30", style: TextStyle(fontSize: 21, color: Colors.green),)
+          const Spacer(),
+          Text(
+            "\$${expenseModel.amount}",
+            style: TextStyle(
+                fontSize: 22, color:expenseModel.isIncome ? Colors.green: Colors.red, fontWeight: FontWeight.bold),
+          )
         ]),
       ),
     );

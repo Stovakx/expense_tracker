@@ -27,7 +27,10 @@ class _HomePageState extends State<HomePage> {
   final dateController = TextEditingController();
   String currentOption = options[0];
   DateTime? pickedDate;
-
+  int deposit = 0;
+  int spentMoney = 0;
+  int income = 0;
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,8 +51,32 @@ class _HomePageState extends State<HomePage> {
                   child: AlertDialog(
                     title: const Text('Add Transaction'),
                     actions: [
-                      TextButton(onPressed: () {}, child: const Text("ADD")),
-                      TextButton(onPressed: () {}, child: const Text("CANCEL"))
+                      TextButton(
+                          onPressed: () {
+                             int convertedAmount =
+                                int.parse(amountController.text);
+                            final expenseModel = ExpenseModel(
+                                item: itemController.text,
+                                amount: convertedAmount,
+                                date: pickedDate!,
+                                isIncome: currentOption == "income" ? true : false);
+                           
+                            items.add(expenseModel);
+                            Navigator.pop(context);
+                            itemController.clear();
+                            amountController.clear();
+                            dateController.clear();
+                            setState(() {});
+                          },
+                          child: const Text("ADD")),
+                      TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            itemController.clear();
+                            amountController.clear();
+                            dateController.clear();
+                          },
+                          child: const Text("CANCEL"))
                     ],
                     content: SizedBox(
                       height: 400,
@@ -59,15 +86,19 @@ class _HomePageState extends State<HomePage> {
                           TextField(
                             controller: itemController,
                             decoration: const InputDecoration(
-                                hintText: "Enter the Item",
-                                enabledBorder: OutlineInputBorder()),
+                              hintText: "Enter the Item",
+                              enabledBorder: OutlineInputBorder(),
+                              focusedBorder: OutlineInputBorder(),
+                            ),
                           ),
                           const SizedBox(height: 8),
                           TextField(
                             controller: amountController,
                             decoration: const InputDecoration(
-                                hintText: "Enter the Amount",
-                                enabledBorder: OutlineInputBorder()),
+                              hintText: "Enter the Amount",
+                              enabledBorder: OutlineInputBorder(),
+                              focusedBorder: OutlineInputBorder(),
+                            ),
                           ),
                           const SizedBox(height: 10),
                           TextField(
@@ -129,7 +160,36 @@ class _HomePageState extends State<HomePage> {
                 child: ListView.builder(
               itemCount: items.length,
               itemBuilder: (context, index) {
-                return const Item();
+                return GestureDetector(
+                  onTap: () {
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text("Confirm to delete item"),
+                            actions: [
+                              TextButton(
+                                  onPressed: () {
+                                    items.remove(
+                                      items[index],
+                                    );
+                                    setState(() {});
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text("Delete")),
+                              TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  }, child: const Text("Cancel"))
+                            ],
+                          );
+                        });
+                  },
+                  child: Item(
+                    expenseModel: items[index],
+                    imageName: 'expense.png',
+                  ),
+                );
               },
             ))
           ],
